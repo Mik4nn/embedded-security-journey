@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Count failed SSH login attempts per IP address in an auth log"""
 
 import sys
@@ -9,6 +10,7 @@ log_path = sys.argv[1] if len(sys.argv) > 1 else "sample_auth.log"
 threhold = 3
 
 failed = {}     # IP address -> numebr of failed attempts
+suspicious = {}
 
 with open(log_path) as log:
     for line in log:
@@ -16,10 +18,17 @@ with open(log_path) as log:
             continue
         words = line.split()
         ip = words[words.index("from") + 1]
+        names = words[words.index("from") - 1]
         failed[ip] = failed.get(ip, 0) + 1
+        suspicious[names] = suspicious.get(names, 0) + 1
 
 print(f"Failed SSH logins in {log_path}:")
 for ip in sorted(failed, key=failed.get, reverse=True):
     count = failed[ip]
     warning = "<-- possible brute force" if count >= threhold else ""
     print(f"{ip}: {count} {warning}")
+print()
+print("Targeted usernames:")
+for names in sorted(suspicious, key=suspicious.get, reverse=True):
+    count = suspicious[names]
+    print(f"{names}: {count}")
