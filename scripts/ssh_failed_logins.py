@@ -7,7 +7,13 @@ import sys
 log_path = sys.argv[1] if len(sys.argv) > 1 else "sample_auth.log"
 
 # Warn when one IP has at least this many failed login attempts
-threhold = 3
+threshold_default = 3
+
+try:
+    treshold = int(sys.argv[2]) if len(sys.argv) > 2 else threshold_default
+except ValueError:
+    print(f"Invalid threshold value: {sys.argv[2]}")
+    sys.exit(1)
 
 failed = {}     # IP address -> numebr of failed attempts
 suspicious = {}
@@ -29,7 +35,7 @@ except FileNotFoundError:
 print(f"Failed SSH logins in {log_path}:")
 for ip in sorted(failed, key=failed.get, reverse=True):
     count = failed[ip]
-    warning = "<-- possible brute force" if count >= threhold else ""
+    warning = "<-- possible brute force" if count >= treshold else ""
     print(f"{ip}: {count} {warning}")
 print()
 print("Targeted usernames:")
