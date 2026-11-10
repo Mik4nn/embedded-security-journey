@@ -12,15 +12,19 @@ threhold = 3
 failed = {}     # IP address -> numebr of failed attempts
 suspicious = {}
 
-with open(log_path) as log:
-    for line in log:
-        if "Failed password" not in line:
-            continue
-        words = line.split()
-        ip = words[words.index("from") + 1]
-        names = words[words.index("from") - 1]
-        failed[ip] = failed.get(ip, 0) + 1
-        suspicious[names] = suspicious.get(names, 0) + 1
+try:
+    with open(log_path) as log:
+        for line in log:
+            if "Failed password" not in line:
+                continue
+            words = line.split()
+            ip = words[words.index("from") + 1]
+            names = words[words.index("from") - 1]
+            failed[ip] = failed.get(ip, 0) + 1
+            suspicious[names] = suspicious.get(names, 0) + 1
+except FileNotFoundError:
+    print(f"File not found: {log_path}")
+    sys.exit(1)
 
 print(f"Failed SSH logins in {log_path}:")
 for ip in sorted(failed, key=failed.get, reverse=True):
