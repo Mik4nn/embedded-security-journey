@@ -17,17 +17,24 @@ except ValueError:
 
 failed = {}     # IP address -> numebr of failed attempts
 suspicious = {}
+alerts = []     # IPs that logged in successfully after failed attempts
 
 try:
     with open(log_path) as log:
         for line in log:
-            if "Failed password" not in line:
-                continue
-            words = line.split()
-            ip = words[words.index("from") + 1]
-            names = words[words.index("from") - 1]
-            failed[ip] = failed.get(ip, 0) + 1
-            suspicious[names] = suspicious.get(names, 0) + 1
+            if "Failed password" in line:
+                words = line.split()
+                ip = words[words.index("from") + 1]
+                names = words[words.index("from") - 1]
+                failed[ip] = failed.get(ip, 0) + 1
+                suspicious[names] = suspicious.get(names, 0) + 1
+            elif "Accepted" in line:
+                words = line.split()
+                ip = words[words.index("from") + 1]
+                names = words[words.index("from") - 1]
+                if ip in failed:
+                    alerts.append(f"ALERT: {ip} logged in as {names} after {failed[ip]} failed attempts")
+
 except FileNotFoundError:
     print(f"File not found: {log_path}")
     sys.exit(1)
@@ -42,3 +49,6 @@ print("Targeted usernames:")
 for names in sorted(suspicious, key=suspicious.get, reverse=True):
     count = suspicious[names]
     print(f"{names}: {count}")
+print()
+for alert in alerts:
+    print(f"\033[31m{alert}")  # Print in red
